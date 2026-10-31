@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#120a1c" />
+<meta name="description" content="Sunset City — an open-world crime sandbox in your browser." />
+<title>SUNSET CITY — Open World</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23120a1c'/%3E%3Ctext x='32' y='45' font-family='Arial' font-size='38' font-weight='bold' text-anchor='middle' fill='%23ff2e88'%3ES%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<div id="app">
+  <canvas id="game" aria-label="Sunset City game view"></canvas>
+  <div id="vignette"></div>
+  <div id="grain"></div>
+
+  <div id="hud" class="hidden" aria-live="polite">
+    <div id="topbar">
+      <div id="mission-panel">
+        <div id="mission-kicker">SUNSET COURIER</div>
+        <div id="mission-title">Pick up the package</div>
+        <div id="mission-desc">Follow the marker on your minimap.</div>
+        <div id="mission-timer" class="hidden"><span id="timer-value">1:30</span></div>
+      </div>
+      <div id="status-cluster">
+        <button id="pause-btn" type="button" aria-label="Pause">❚❚</button>
+        <div id="clock">19:42</div>
+        <div id="wanted" aria-label="wanted level"></div>
+        <div id="cash">$0</div>
+      </div>
+    </div>
+
+    <div id="minimap-wrap">
+      <canvas id="minimap" width="240" height="240"></canvas>
+      <div id="minimap-ring"></div>
+      <div id="compass">N</div>
+      <div id="objective-dist">--</div>
+    </div>
+
+    <div id="vitals">
+      <div class="vital-row"><span class="vital-label">HEALTH</span><div class="bar"><div id="health-fill"></div></div></div>
+      <div class="vital-row"><span class="vital-label">ARMOR</span><div class="bar"><div id="armor-fill"></div></div></div>
+    </div>
+
+    <div id="weapon-panel">
+      <div id="weapon-name">PISTOL</div>
+      <div id="ammo"><span id="ammo-value">12</span><small>/ ∞</small></div>
+    </div>
+
+    <div id="speedo" class="hidden">
+      <span id="speed-value">0</span><small>KM/H</small>
+    </div>
+
+    <div id="crosshair">
+      <i class="ch ch-t"></i><i class="ch ch-b"></i><i class="ch ch-l"></i><i class="ch ch-r"></i>
+      <i class="ch-dot"></i>
+      <div id="hitmarker"></div>
+    </div>
+
+    <div id="prompt" class="hidden"><kbd>F</kbd><span id="prompt-text">Enter vehicle</span></div>
+
+    <div id="toast-wrap"></div>
+
+    <div id="mission-banner" class="hidden">
+      <div id="banner-kicker">MISSION PASSED</div>
+      <div id="banner-title">SUNSET COURIER</div>
+      <div id="banner-reward">+$900</div>
+    </div>
+
+    <div id="damage-flash"></div>
+
+    <div id="controls-hint">
+      <span><b>WASD</b> MOVE</span><span><b>MOUSE</b> AIM</span><span><b>LMB</b> FIRE</span>
+      <span><b>F</b> ENTER / EXIT</span><span><b>R</b> RELOAD</span><span><b>SHIFT</b> SPRINT</span>
+      <span><b>SPACE</b> JUMP / HANDBRAKE</span><span><b>ESC</b> PAUSE</span>
+    </div>
+  </div>
+
+  <div id="menu" class="screen">
+    <div class="menu-glow"></div>
+    <div class="menu-inner">
+      <div class="eyebrow">VICE SHORES PRESENTS</div>
+      <h1 class="logo">SUNSET<span>CITY</span></h1>
+      <p class="tagline">One city. No rules. One last score before sunrise.</p>
+      <button id="start-btn" class="btn-primary" type="button">
+        <span class="btn-label">START THE NIGHT</span>
+        <span class="btn-sub">WASD to move · F to steal a car</span>
+      </button>
+      <div class="menu-grid">
+        <div class="menu-card">
+          <h3>DRIVE</h3>
+          <p>Steal anything with wheels. Handbrake through the neon.</p>
+        </div>
+        <div class="menu-card">
+          <h3>SURVIVE</h3>
+          <p>Heat attracts patrols. Lose the stars or lose everything.</p>
+        </div>
+        <div class="menu-card">
+          <h3>GET PAID</h3>
+          <p>Run courier jobs and bounties across the island.</p>
+        </div>
+      </div>
+      <div class="menu-foot">
+        <span>THREE.JS · PROCEDURAL CITY</span>
+        <span class="dot">●</span>
+        <span>KEYBOARD + MOUSE / TOUCH</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="pause" class="screen hidden">
+    <div class="pause-inner">
+      <div class="eyebrow">TAKE A BREATH</div>
+      <h2>PAUSED</h2>
+      <div class="pause-actions">
+        <button id="resume-btn" class="btn-primary" type="button"><span class="btn-label">RESUME</span></button>
+        <button id="restart-btn" class="btn-ghost" type="button">RESTART NIGHT</button>
+        <button id="mute-btn" class="btn-ghost" type="button">SOUND: ON</button>
+      </div>
+      <div class="pause-controls">
+        <div><b>WASD</b> Move / Drive</div><div><b>MOUSE</b> Look / Aim</div>
+        <div><b>LMB</b> Fire</div><div><b>RMB</b> Aim down sights</div>
+        <div><b>F</b> Enter / exit vehicle</div><div><b>R</b> Reload</div>
+        <div><b>SHIFT</b> Sprint / Boost</div><div><b>SPACE</b> Jump / Handbrake</div>
+        <div><b>M</b> Mute</div><div><b>ESC</b> Pause</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="wasted" class="screen hidden">
+    <div class="wasted-inner">
+      <div class="wasted-title">WASTED</div>
+      <p id="wasted-sub">The city always wins.</p>
+      <div class="wasted-fee">MEDICAL BILL <b id="wasted-cost">-$500</b></div>
+      <button id="respawn-btn" class="btn-primary" type="button"><span class="btn-label">WAKE UP</span></button>
+    </div>
+  </div>
+
+  <div id="mobile-controls" class="hidden">
+    <div id="joystick"><div id="joystick-knob"></div></div>
+    <div id="mobile-buttons">
+      <button class="mbtn mbtn-small" id="btn-sprint" type="button">RUN</button>
+      <button class="mbtn mbtn-small" id="btn-action" type="button">CAR</button>
+      <button class="mbtn mbtn-fire" id="btn-fire" type="button">FIRE</button>
+      <button class="mbtn mbtn-small" id="btn-jump" type="button">JUMP</button>
+    </div>
+  </div>
+
+  <div id="loading">
+    <div class="load-inner">
+      <div class="load-logo">SUNSET CITY</div>
+      <div class="load-bar"><div id="load-fill"></div></div>
+      <div id="load-text">BUILDING THE ISLAND…</div>
+    </div>
+  </div>
+</div>
+<script type="module" src="./js/game.js"></script>
+</body>
+</html>
